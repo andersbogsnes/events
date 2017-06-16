@@ -56,4 +56,13 @@ class Turns(db.Model):
     def next_turn(cls):
         return db.session.query(Turns).filter_by(finished=False).first()
 
+    def serialize(self):
+        return {
+            "id": self.turn_id,
+            "finished": self.finished,
+            "name": self.user.name,
+            "phone": self.user.phone,
+            "email": self.user.email
+        }
+
 
