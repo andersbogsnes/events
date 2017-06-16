@@ -11,16 +11,16 @@ class User(db.Model):
     name = db.Column(db.String)
     email = db.Column(db.String)
     phone = db.Column(db.Integer)
-    created_date = dt.datetime.today()
-    last_updated = dt.datetime.today()
+    turn_id = db.Column(db.Integer, db.ForeignKey('turns.turn_id'))
+    created_date = db.Column(db.DateTime, default=dt.datetime.today())
+    last_updated = db.Column(db.DateTime, default=dt.datetime.today(), onupdate=dt.datetime.today())
 
-    turns = db.relationship("turns", backref="user", uselist=False)
+    turn = db.relationship("Turns", backref=db.backref("user", uselist=False))
 
-    def __init__(self, name, email, phone=None, turn=None):
+    def __init__(self, name, email, phone=None):
         self.name = name
         self.email = email
         self.phone = phone
-        self.turn = turn
 
     def __repr__(self):
         return f"<User {self.name}>"
@@ -28,9 +28,9 @@ class User(db.Model):
     @classmethod
     def create(cls, name, email, phone):
         user = cls(name=name, email=email, phone=phone)
-        db.session.add(user)
-        user.turns = Turns(finished=False)
+        user.turn = Turns(finished=False)
 
+        db.session.add(user)
         db.session.commit()
         return user
 
@@ -41,7 +41,8 @@ class User(db.Model):
             "email": self.email,
             "phone": self.phone,
             "created": self.created_date,
-            "turn": self.turn
+            "turn": self.turn.turn_id,
+            "finished": self.turn.finished
         }
 
 
@@ -50,6 +51,9 @@ class Turns(db.Model):
 
     turn_id = db.Column(db.Integer, primary_key=True)
     finished = db.Column(db.Boolean)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    accepted = db.relationship("User", backref="accept")
+    @classmethod
+    def next_turn(cls):
+        return db.session.query(Turns).filter_by(finished=False).first()
+
+

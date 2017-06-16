@@ -1,6 +1,6 @@
 import unittest
 from main import create_app
-from model import db, User
+from model import db, User, Turns
 from config import TestConfig
 import json
 
@@ -8,11 +8,9 @@ import json
 def json_body(resp):
     return json.loads(resp.data.decode('utf-8'))
 
-def create_user(user_data, app, db):
+def create_user(user_data, app):
     with app.app_context():
-        user = User.create(**user_data)
-        db.session.add(user)
-        db.session.commit()
+        User.create(**user_data)
 
 
 class TestApp(unittest.TestCase):
@@ -43,7 +41,7 @@ class TestApp(unittest.TestCase):
 
     def test_get_multiple_users(self):
         for user in self.test_users:
-            create_user(user, self.app, db)
+            create_user(user, self.app)
         resp = self.client.get("/users")
         data = json_body(resp)
         self.assertEqual(200, resp.status_code)
@@ -54,18 +52,37 @@ class TestApp(unittest.TestCase):
         self.assertEqual(2, data[1]["id"])
 
     def test_turn_nr_is_initialized_on_user(self):
-        create_user(self.test_users[0], self.app, db)
+        create_user(self.test_users[0], self.app)
         with self.app.app_context():
             user = db.session.query(User).first()
-            self.assertEqual(1, user.turn)
+            self.assertEqual(1, user.turn.turn_id)
 
     def test_turn_is_incremented_correctly(self):
         for user in self.test_users:
-            create_user(user, self.app, db)
+            create_user(user, self.app)
 
         with self.app.app_context():
             users = db.session.query(User).all()
-            self.assertEqual(1, users[0].turn)
-            self.assertEqual(2, users[1].turn)
+            turns = db.session.query(Turns).all()
+            self.assertEqual(1, users[0].turn.turn_id)
+            self.assertEqual(2, users[1].turn.turn_id)
+            self.assertEqual(self.test_users[0]["name"], turns[0].user.name)
+            self.assertEqual(self.test_users[1]["phone"], turns[1].user.phone)
+
+    def  test_find_next_turn(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            next_turn = Turns.next_turn()
+            self.assertEqual(self.test_users[0]["name"], next_turn.user.name)
+
+            first_user = db.session.query(User).first()
+            first_user.turn.finished = True
+            db.session.add(first_user)
+            db.session.commit()
+
+            next_turn = Turns.next_turn()
+            self.assertEqual(self.test_users[1]["name"], next_turn.user.name)
 
 
