@@ -159,3 +159,18 @@ class TestApp(unittest.TestCase):
         with self.app.app_context():
             user = db.session.query(User).filter_by(id=1).first()
             self.assertTrue(user.turn.finished)
+
+    def test_that_turn_pop_sets_old_turn_as_finished_and_adds_new(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            user = User.query.get(1)
+            self.assertEqual(1, user.turn.turn_id)
+
+            Turns.pop(user.id)
+            user = User.query.get(1)
+            self.assertEqual(3, user.turn.turn_id)
+            turn = Turns.query.get(1)
+            self.assertTrue(turn.finished)
+            self.assertEqual(1, turn.user.id)

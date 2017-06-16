@@ -11,11 +11,11 @@ class User(db.Model):
     name = db.Column(db.String)
     email = db.Column(db.String)
     phone = db.Column(db.Integer)
-    turn_id = db.Column(db.Integer, db.ForeignKey('turns.turn_id'))
+
     created_date = db.Column(db.DateTime, default=dt.datetime.today())
     last_updated = db.Column(db.DateTime, default=dt.datetime.today(), onupdate=dt.datetime.today())
 
-    turn = db.relationship("Turns", backref=db.backref("user", uselist=False))
+
 
     def __init__(self, name, email, phone=None):
         self.name = name
@@ -52,10 +52,21 @@ class Turns(db.Model):
     # TODO: Implement as queue
     turn_id = db.Column(db.Integer, primary_key=True)
     finished = db.Column(db.Boolean)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    user = db.relationship("User", backref=db.backref("turn", uselist=False))
 
     @classmethod
     def next_turn(cls):
-        return Turns.query.filter_by(finished=False).first()
+        return cls.query.filter_by(finished=False).first()
+
+    @classmethod
+    def pop(cls, user_id):
+        user = User.query.get(user_id)
+        user.turn.finished = True
+        user.turn = cls(finished=False)
+        db.session.add(user)
+        db.session.commit()
 
     def serialize(self):
         return {
