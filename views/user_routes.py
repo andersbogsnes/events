@@ -1,20 +1,17 @@
 from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest
 from model import User, db
 
 user_route = Blueprint('api', __name__)
 
-@user_route.route('/')
-def index():
-    return "Here will be usage instructions for api"
-
 
 @user_route.route("/user", methods=["POST"])
 def create_user():
-    data = request.get_json(force=True)
-    if data:
+    try:
+        data = request.get_json(force=True)
         user = User.create(**data)
         return jsonify({"success": user.id}), 200
-    else:
+    except BadRequest:
         return jsonify({"error": "Invalid data"}), 401
 
 

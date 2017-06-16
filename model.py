@@ -49,12 +49,13 @@ class User(db.Model):
 class Turns(db.Model):
     __tablename__ = 'turns'
 
+    # TODO: Implement as queue
     turn_id = db.Column(db.Integer, primary_key=True)
     finished = db.Column(db.Boolean)
 
     @classmethod
     def next_turn(cls):
-        return db.session.query(Turns).filter_by(finished=False).first()
+        return Turns.query.filter_by(finished=False).first()
 
     def serialize(self):
         return {

@@ -11,4 +11,9 @@ def create_app(config):
     db.init_app(app)
     app.register_blueprint(user_route)
     app.register_blueprint(turn_routes)
+
+    @app.route('/')
+    def index():
+        return "Here will be usage instructions for api"
+
     return app

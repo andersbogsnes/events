@@ -28,6 +28,12 @@ class TestApp(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
 
+    def test_index_exists(self):
+        resp = self.client.get('/')
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual("Here will be usage instructions for api", resp.data.decode('utf-8'))
+
     def test_create_user_and_get_created_user(self):
         resp = self.client.post('/user', data=json.dumps(self.test_users[0]))
         self.assertEqual(200, resp.status_code)
@@ -39,6 +45,20 @@ class TestApp(unittest.TestCase):
         self.assertEqual(1, data["id"])
         self.assertEqual(self.test_users[0]["name"], data["name"])
         self.assertEqual(1, data["turn"])
+
+    def test_user_repr_is_as_expected(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            user = User.query.get(1)
+            self.assertEqual("<User Test Mctesterson>", user.__repr__())
+
+    def test_posting_invalid_data_to_user(self):
+        resp = self.client.post('/user')
+        data = json_body(resp)
+        self.assertEqual(401, resp.status_code)
+        self.assertIn("error", data)
 
     def test_get_multiple_users(self):
         for user in self.test_users:
