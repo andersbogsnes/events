@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from model import db, Turns
 
@@ -23,3 +23,15 @@ def get_next_turn():
             db.session.add(turn)
         db.session.commit()
         return jsonify(Turns.next_turn().serialize()), 200
+
+
+@turn_routes.route('/turn/<int:id>', methods=["PUT"])
+def modify_turn(id):
+    data = request.get_json(force=True)
+    if data:
+        turn = Turns.query.get(id)
+        for key, value in data.items():
+            setattr(turn, key, value)
+        db.session.add(turn)
+        db.session.commit()
+        return jsonify(turn.serialize()), 200

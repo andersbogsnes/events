@@ -1,7 +1,9 @@
 from flask import Flask
+from views.turn_routes import turn_routes
+
 from model import db
-from user_routes import user_route
-from turn_routes import turn_routes
+from views.user_routes import user_route
+
 
 def create_app(config):
     app = Flask(__name__)

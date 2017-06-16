@@ -126,3 +126,16 @@ class TestApp(unittest.TestCase):
             self.assertEqual(self.test_users[0]["name"], data["name"])
             user = db.session.query(User).filter_by(id=1).first()
             self.assertEqual(False, user.turn.finished)
+
+    def test_mark_turn_as_completed(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        resp = self.client.put('/turn/1', data=json.dumps({"finished": True}))
+        data = json_body(resp)
+        self.assertEqual(200, resp.status_code)
+        self.assertTrue(data["finished"])
+
+        with self.app.app_context():
+            user = db.session.query(User).filter_by(id=1).first()
+            self.assertTrue(user.turn.finished)
