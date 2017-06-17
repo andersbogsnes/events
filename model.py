@@ -28,7 +28,7 @@ class User(db.Model):
     @classmethod
     def create(cls, name, email, phone):
         user = cls(name=name, email=email, phone=phone)
-        user.turn = Turns(finished=False)
+        user.turn.append(Turns(finished=False))
 
         db.session.add(user)
         db.session.commit()
@@ -54,7 +54,7 @@ class Turns(db.Model):
     finished = db.Column(db.Boolean)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    user = db.relationship("User", backref=db.backref("turn", uselist=False))
+    user = db.relationship("User", backref=db.backref("turn", lazy='dynamic'))
 
     @classmethod
     def next_turn(cls):
