@@ -172,6 +172,7 @@ class TestApp(unittest.TestCase):
             user = User.query.get(1)
             self.assertEqual(3, user.turn[-1].turn_id)
             turns = Turns.query.filter(Turns.user_id == user.id)
-            for turn in turns:
-                self.assertTrue(turn.finished)
-                self.assertEqual(1, turn.user.id)
+            self.assertTrue(turns[0].finished)
+            self.assertFalse(turns[-1].finished)
+            self.assertEqual(1, turns[0].user.id)
+            self.assertEqual(1, turns[-1].user.id)

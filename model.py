@@ -64,6 +64,8 @@ class Turns(db.Model):
     @classmethod
     def pop(cls, user_id):
         user = User.query.get(user_id)
+        for turn in user.turn:
+            turn.finished = True
         user.turn.append(cls(finished=False))
         db.session.add(user)
         db.session.commit()
