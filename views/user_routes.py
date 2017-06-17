@@ -17,7 +17,7 @@ def create_user():
 
 @user_route.route("/user/<int:id>", methods=["GET"])
 def get_user(id):
-    user = db.session.query(User).filter_by(id=id).first()
+    user = User.query.get(id)
     return jsonify(user.serialize()), 200
 
 

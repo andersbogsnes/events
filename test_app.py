@@ -78,7 +78,7 @@ class TestApp(unittest.TestCase):
     def test_turn_nr_is_initialized_on_user(self):
         create_user(self.test_users[0], self.app)
         with self.app.app_context():
-            user = db.session.query(User).first()
+            user = User.query.get(1)
             self.assertEqual(1, user.turn.turn_id)
 
     def test_turn_is_incremented_correctly(self):
@@ -102,7 +102,7 @@ class TestApp(unittest.TestCase):
             self.assertEqual(self.test_users[0]["name"], next_turn.user.name)
 
             first_user = db.session.query(User).first()
-            first_user.turn.finished = True
+            first_user.turn[0].finished = True
             db.session.add(first_user)
             db.session.commit()
 
