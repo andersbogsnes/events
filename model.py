@@ -15,8 +15,6 @@ class User(db.Model):
     created_date = db.Column(db.DateTime, default=dt.datetime.today())
     last_updated = db.Column(db.DateTime, default=dt.datetime.today(), onupdate=dt.datetime.today())
 
-
-
     def __init__(self, name, email, phone=None):
         self.name = name
         self.email = email
@@ -28,8 +26,7 @@ class User(db.Model):
     @classmethod
     def create(cls, name, email, phone):
         user = cls(name=name, email=email, phone=phone)
-        new_turn = Turns(finished=False)
-        user.turn.append(new_turn)
+        user.turn = Turns(finished=False)
 
         db.session.add(user)
         db.session.commit()
@@ -42,8 +39,8 @@ class User(db.Model):
             "email": self.email,
             "phone": self.phone,
             "created": self.created_date,
-            "turn": self.turn[0].turn_id,
-            "finished": self.turn[0].finished
+            "turn": self.turn.turn_id,
+            "finished": self.turn.finished
         }
 
 
@@ -55,7 +52,7 @@ class Turns(db.Model):
     finished = db.Column(db.Boolean)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    user = db.relationship("User", backref=db.backref("turn"))
+    user = db.relationship("User", backref=db.backref("turn", cascade="all, delete-orphan", uselist=False))
 
     @classmethod
     def next_turn(cls):
@@ -64,9 +61,7 @@ class Turns(db.Model):
     @classmethod
     def pop(cls, user_id):
         user = User.query.get(user_id)
-        for turn in user.turn:
-            turn.finished = True
-        user.turn.append(cls(finished=False))
+        user.turn = cls(finished=False)
         db.session.add(user)
         db.session.commit()
 
@@ -78,5 +73,3 @@ class Turns(db.Model):
             "phone": self.user.phone,
             "email": self.user.email
         }
-
-

@@ -79,7 +79,7 @@ class TestApp(unittest.TestCase):
         create_user(self.test_users[0], self.app)
         with self.app.app_context():
             user = User.query.get(1)
-            self.assertEqual(1, user.turn[0].turn_id)
+            self.assertEqual(1, user.turn.turn_id)
 
     def test_turn_is_incremented_correctly(self):
         for user in self.test_users:
@@ -88,8 +88,8 @@ class TestApp(unittest.TestCase):
         with self.app.app_context():
             users = db.session.query(User).all()
             turns = db.session.query(Turns).all()
-            self.assertEqual(1, users[0].turn[0].turn_id)
-            self.assertEqual(2, users[1].turn[0].turn_id)
+            self.assertEqual(1, users[0].turn.turn_id)
+            self.assertEqual(2, users[1].turn.turn_id)
             self.assertEqual(self.test_users[0]["name"], turns[0].user.name)
             self.assertEqual(self.test_users[1]["phone"], turns[1].user.phone)
 
@@ -102,7 +102,7 @@ class TestApp(unittest.TestCase):
             self.assertEqual(self.test_users[0]["name"], next_turn.user.name)
 
             first_user = db.session.query(User).first()
-            first_user.turn[0].finished = True
+            first_user.turn.finished = True
             db.session.add(first_user)
             db.session.commit()
 
@@ -131,13 +131,13 @@ class TestApp(unittest.TestCase):
         with self.app.app_context():
             users = db.session.query(User).all()
             for user in users:
-                user.turn[0].finished = True
+                user.turn.finished = True
                 db.session.add(user)
             db.session.commit()
 
             # Make sure that first user turn is now finished
             user = User.query.get(1)
-            self.assertEqual(True, user.turn[0].finished)
+            self.assertEqual(True, user.turn.finished)
 
             resp = self.client.get("/turn")
             data = json_body(resp)
@@ -145,7 +145,7 @@ class TestApp(unittest.TestCase):
             self.assertEqual(1, data["id"])
             self.assertEqual(self.test_users[0]["name"], data["name"])
             user = db.session.query(User).filter_by(id=1).first()
-            self.assertEqual(False, user.turn[0].finished)
+            self.assertEqual(False, user.turn.finished)
 
     def test_mark_turn_as_completed(self):
         for user in self.test_users:
@@ -158,7 +158,7 @@ class TestApp(unittest.TestCase):
 
         with self.app.app_context():
             user = db.session.query(User).filter_by(id=1).first()
-            self.assertTrue(user.turn[0].finished)
+            self.assertTrue(user.turn.finished)
 
     def test_that_turn_pop_sets_old_turn_as_finished_and_adds_new(self):
         for user in self.test_users:
@@ -166,13 +166,13 @@ class TestApp(unittest.TestCase):
 
         with self.app.app_context():
             user = User.query.get(1)
-            self.assertEqual(1, user.turn[0].turn_id)
+            self.assertEqual(1, user.turn.turn_id)
 
             Turns.pop(user.id)
             user = User.query.get(1)
-            self.assertEqual(3, user.turn[-1].turn_id)
-            turns = Turns.query.filter(Turns.user_id == user.id)
-            self.assertTrue(turns[0].finished)
-            self.assertFalse(turns[-1].finished)
+            self.assertEqual(3, user.turn.turn_id)
+
+            turns = Turns.query.filter(Turns.user_id == user.id).all()
+            self.assertTrue(1, len(turns))
+            self.assertFalse(turns[0].finished)
             self.assertEqual(1, turns[0].user.id)
-            self.assertEqual(1, turns[-1].user.id)
