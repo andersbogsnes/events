@@ -1,6 +1,6 @@
 import json
 
-from app.model import User, db
+from app.model import db
 from tests.utils import BaseTestClass
 
 
