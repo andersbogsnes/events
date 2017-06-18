@@ -11,6 +11,7 @@ signup_association = db.Table('signups',
 class EventSignupException(Exception):
     pass
 
+
 def swap_turn(user1, user2):
     """
     Takes two users and swaps their turns
@@ -82,8 +83,9 @@ class Turns(db.Model):
         return cls.query.filter_by(finished=False).first()
 
     @classmethod
-    def pop(cls, user_id):
-        user = User.query.get(user_id)
+    def pop(cls):
+        turn = Turns.next_turn()
+        user = turn.user
         user.turn = cls(finished=False)
         db.session.add(user)
         db.session.commit()
@@ -104,12 +106,12 @@ class Turns(db.Model):
         except ValueError:
             raise EventSignupException("User is not signed up")
 
-
     def serialize(self):
         return {
             "id": self.turn_id,
             "finished": self.finished,
             "name": self.user.name,
             "phone": self.user.phone,
-            "email": self.user.email
+            "email": self.user.email,
+            "signed_up": [user.name for user in self.signed_up]
         }

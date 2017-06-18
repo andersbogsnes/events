@@ -22,7 +22,8 @@ class TestApp(unittest.TestCase):
             db.create_all()
 
         self.test_users = [{"name": "Test Mctesterson", "email": "test@tester.com", "phone": 123456},
-                           {"name": "Sons Sonsserson", "email": "son@sonsserion.com", "phone": 239874}]
+                           {"name": "Sons Sonsserson", "email": "son@sonsserion.com", "phone": 239874},
+                           {"name": "Mr Superson", "email": "mr@superson.com", "phone": 2133435}]
 
     def tearDown(self):
         with self.app.app_context():
@@ -67,7 +68,7 @@ class TestApp(unittest.TestCase):
         data = json_body(resp)
 
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(2, len(data))
+        self.assertEqual(3, len(data))
         self.assertEqual(self.test_users[0]["name"], data[0]["name"])
         self.assertEqual(self.test_users[1]["phone"], data[1]["phone"])
         self.assertEqual(1, data[0]["id"])
@@ -127,25 +128,6 @@ class TestApp(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual(self.test_users[0]["name"], data["name"])
 
-        # Test if turns "roll over" when exceeding max
-        with self.app.app_context():
-            users = db.session.query(User).all()
-            for user in users:
-                user.turn.finished = True
-                db.session.add(user)
-            db.session.commit()
-
-            # Make sure that first user turn is now finished
-            user = User.query.get(1)
-            self.assertEqual(True, user.turn.finished)
-
-            resp = self.client.get("/turn")
-            data = json_body(resp)
-
-            self.assertEqual(1, data["id"])
-            self.assertEqual(self.test_users[0]["name"], data["name"])
-            user = db.session.query(User).filter_by(id=1).first()
-            self.assertEqual(False, user.turn.finished)
 
     def test_mark_turn_as_completed(self):
         for user in self.test_users:
@@ -168,9 +150,9 @@ class TestApp(unittest.TestCase):
             user = User.query.get(1)
             self.assertEqual(1, user.turn.turn_id)
 
-            Turns.pop(user.id)
+            Turns.pop()
             user = User.query.get(1)
-            self.assertEqual(3, user.turn.turn_id)
+            self.assertEqual(4, user.turn.turn_id)
 
             turns = Turns.query.filter(Turns.user_id == user.id).all()
             self.assertTrue(1, len(turns))
@@ -219,6 +201,20 @@ class TestApp(unittest.TestCase):
             self.assertIn(this_turn, user2.signed_up_for)
 
     def test_api_call_for_signing_up_for_event(self):
+        data = {
+            "turn_id": 1,
+            "user_id": 2
+        }
+
+        resp = self.client.patch('/turns/signup', data=json.dumps(data))
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.client.get('/turns/1')
+        self.assertEqual(200, resp.status_code)
+        self.assertIn(2, json_body(resp)["signed_up"])
+
+
+    def test_api_call_for_withdrawing_from_signed_up_event(self):
         pass
 
     def test_change_signup_status_after_signup(self):
@@ -227,7 +223,6 @@ class TestApp(unittest.TestCase):
 
         # Sign up user2 for user1's event
         with self.app.app_context():
-
             user2 = User.query.get(2)
             current_turn = Turns.next_turn()
 
@@ -236,7 +231,7 @@ class TestApp(unittest.TestCase):
             db.session.commit()
             self.assertIn(current_turn, user2.signed_up_for)
 
-        # Withdraw from signed up event
+            # Withdraw from signed up event
             current_turn.withdraw(user2)
 
             self.assertNotIn(current_turn, user2.signed_up_for)
@@ -273,6 +268,3 @@ class TestApp(unittest.TestCase):
 
             # User is still not signed up
             self.assertNotIn(user2, current_turn.signed_up)
-
-
-
