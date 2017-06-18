@@ -1,8 +1,8 @@
 from flask import Flask
-from views.turn_routes import turn_routes
+from app.views.user_routes import user_route
 
-from model import db
-from views.user_routes import user_route
+from app.model import db
+from app.views.turn_routes import turn_routes
 
 
 def create_app(config):

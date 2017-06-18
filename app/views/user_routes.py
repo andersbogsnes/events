@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
-from model import User, db
+
+from app.model import User, db
 
 user_route = Blueprint('api', __name__)
 

@@ -30,9 +30,9 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    email = db.Column(db.String)
-    phone = db.Column(db.Integer)
+    name = db.Column(db.String, unique=True)
+    email = db.Column(db.String, unique=True)
+    phone = db.Column(db.Integer, unique=True)
 
     created_date = db.Column(db.DateTime, default=dt.datetime.today())
     last_updated = db.Column(db.DateTime, default=dt.datetime.today(), onupdate=dt.datetime.today())
@@ -89,6 +89,7 @@ class Turns(db.Model):
         user.turn = cls(finished=False)
         db.session.add(user)
         db.session.commit()
+        return cls.next_turn()
 
     def signup(self, user):
         if user not in self.signed_up:
@@ -113,5 +114,5 @@ class Turns(db.Model):
             "name": self.user.name,
             "phone": self.user.phone,
             "email": self.user.email,
-            "signed_up": [user.name for user in self.signed_up]
+            "signed_up": [user.id for user in self.signed_up]
         }
