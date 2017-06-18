@@ -200,3 +200,16 @@ class TestApp(unittest.TestCase):
             self.assertEqual(user2.id, turn1.user.id)
             turn2 = Turns.query.get(turn2_id)
             self.assertEqual(user.id, turn2.user.id)
+
+    def test_signing_up_for_event_works_as_expected(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+        # TODO: Block turns user from signing up to own turn
+        with self.app.app_context():
+            user2 = User.query.get(2)
+            this_turn = Turns.next_turn()
+
+            this_turn.signup(user2)
+
+            this_turn = Turns.next_turn()
+            self.assertIn(user2, this_turn.signed_up)
