@@ -1,5 +1,4 @@
-import json
-from app.model import db, User, Turns, swap_turn, EventSignupException
+from app.model import db, User, Turns, EventSignupException
 from tests.utils import BaseTestClass
 
 
@@ -53,7 +52,7 @@ class TestDataModel(BaseTestClass):
             turn1_id = user.turn.turn_id
             turn2_id = user2.turn.turn_id
 
-            swap_turn(user, user2)
+            user.swap_turn(user2)
 
             user = User.query.get(1)
             self.assertEqual(turn2_id, user.turn.turn_id)

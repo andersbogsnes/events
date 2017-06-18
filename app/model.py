@@ -12,20 +12,6 @@ class EventSignupException(Exception):
     pass
 
 
-def swap_turn(user1, user2):
-    """
-    Takes two users and swaps their turns
-    :param user1: db.Model.User
-    :param user2: db.Model.User
-    :return: None
-    """
-
-    user2.turn, user1.turn = user1.turn, user2.turn
-    db.session.add(user1)
-    db.session.add(user2)
-    db.session.commit()
-
-
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -55,6 +41,19 @@ class User(db.Model):
         db.session.add(user)
         db.session.commit()
         return user
+
+    def swap_turn(self, user2):
+        """
+        Takes two users and swaps their turns
+        :param user1: db.Model.User
+        :param user2: db.Model.User
+        :return: None
+        """
+
+        user2.turn, self.turn = self.turn, user2.turn
+        db.session.add(self)
+        db.session.add(user2)
+        db.session.commit()
 
     def serialize(self):
         return {
@@ -111,6 +110,7 @@ class Turns(db.Model):
         return {
             "id": self.turn_id,
             "finished": self.finished,
+            "user_id": self.user.id,
             "name": self.user.name,
             "phone": self.user.phone,
             "email": self.user.email,

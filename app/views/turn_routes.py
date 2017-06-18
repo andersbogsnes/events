@@ -48,7 +48,7 @@ def modify_turn(id):
 
 
 @turn_routes.route('/turn/signup/<int:id>', methods=["PUT"])
-def signup_to_turn(id):
+def signup_for_turn(id):
     try:
         data = request.get_json(force=True)
         user = User.query.get(data["signed_up"])
@@ -57,6 +57,23 @@ def signup_to_turn(id):
             turn.signup(user)
             return jsonify({"success": f"{user.name} signed up for turn {turn.turn_id}"}), 201
         else:
-            return jsonify({"error": f"User {data['signed_up']} not found"}), 401
+            return jsonify({"error": f"User {data['signed_up']} not found"}), 404
+    except BadRequest:
+        return jsonify({"error": "Couldn't read request"}), 401
+
+
+@turn_routes.route('/turn/withdraw/<int:id>', methods=["PUT"])
+def withdraw_from_turn(id):
+    try:
+        data = request.get_json(force=True)
+        user = User.query.get(data["withdraw"])
+        turn = Turns.query.get(id)
+        if user:
+            turn.withdraw(user)
+            return jsonify({"success": f"{user.name} withdrew from turn {turn.turn_id}"}), 201
+        else:
+            return jsonify({"error": f"User {data['withdraw']} not found"}), 404
+
+
     except BadRequest:
         return jsonify({"error": "Couldn't read request"}), 401

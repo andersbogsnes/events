@@ -87,7 +87,6 @@ class TestApi(BaseTestClass):
         resp = self.client.get('/turn')
         self.assertEqual(3, self.json_body(resp)["id"])
 
-
     def test_api_call_for_signing_up_for_event(self):
         data = {
             "signed_up": 2
@@ -100,5 +99,74 @@ class TestApi(BaseTestClass):
         self.assertEqual(200, resp.status_code)
         self.assertIn(2, self.json_body(resp)["signed_up"])
 
+        # Signup another user and check that there are now two signups
+        data = {
+            "signed_up": 3
+        }
+
+        resp = self.client.put('/turn/signup/1', data=json.dumps(data))
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.client.get('/turn/1')
+        self.assertIn(2, self.json_body(resp)["signed_up"])
+        self.assertIn(3, self.json_body(resp)["signed_up"])
+
     def test_api_call_for_withdrawing_from_signed_up_event(self):
-        pass
+        # Start by signing up user 2
+        data = {
+            "signed_up": 2
+        }
+        resp = self.client.put('/turn/signup/1', data=json.dumps(data))
+        self.assertEqual(201, resp.status_code)
+
+        # Ensure user 2 is signed up
+        resp = self.client.get('/turn/1')
+        self.assertIn(2, self.json_body(resp)["signed_up"])
+
+        # Withdraw user 2
+        data = {
+            "withdraw": 2
+        }
+
+        resp = self.client.put('/turn/withdraw/1', data=json.dumps(data))
+        self.assertEqual(201, resp.status_code)
+
+        # Ensure user 2 is withdrawn
+        resp = self.client.get('/turn/1')
+        self.assertNotIn(2, self.json_body(resp)["signed_up"])
+
+    def test_api_call_for_switching_users(self):
+        # Get inital users
+        resp = self.client.get('/user/1')
+        self.assertEqual(200, resp.status_code)
+        user1_id = self.json_body(resp)["id"]
+        self.assertEqual(1, user1_id)
+
+        resp = self.client.get('/user/2')
+        self.assertEqual(200, resp.status_code)
+        user2_id = self.json_body(resp)["id"]
+        self.assertEqual(2, user2_id)
+
+        # Ensure that user1 has turn_nr 1 and user2 has turn_nr2
+        resp = self.client.get('/turn/1')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(user1_id, self.json_body(resp)["user_id"])
+
+        resp = self.client.get('/turn/2')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(user2_id, self.json_body(resp)["user_id"])
+
+        # Swap user 1 and 2
+        data = {
+            "swap": [1, 2]
+        }
+        resp = self.client.put('/user/swap', data=json.dumps(data))
+        self.assertEqual(201, resp.status_code)
+        self.assertIn("success", self.json_body(resp))
+
+        # Ensure user 1 and 2 are swapped
+        resp = self.client.get('/turn/1')
+        self.assertEqual(user2_id, self.json_body(resp)["user_id"])
+
+        resp = self.client.get('/turn/2')
+        self.assertEqual(user1_id, self.json_body(resp)["user_id"])
