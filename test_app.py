@@ -1,6 +1,6 @@
 import unittest
 from main import create_app
-from model import db, User, Turns,swap_turn
+from model import db, User, Turns, swap_turn, EventSignupException
 from config import TestConfig
 import json
 
@@ -241,5 +241,24 @@ class TestApp(unittest.TestCase):
 
             self.assertNotIn(current_turn, user2.signed_up_for)
             self.assertEqual(0, len(current_turn.signed_up))
+
+    def test_sign_up_for_already_signed_up_event(self):
+        pass
+
+    def test_change_signup_status_when_user_not_already_signed_up(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            user2 = User.query.get(2)
+            current_turn = Turns.next_turn()
+            # Make sure user not signed_up
+            self.assertNotIn(user2, current_turn.signed_up)
+            # Try to withdraw from event that user is not signed up for - should raise exception
+            self.assertRaises(EventSignupException, current_turn.withdraw, user2)
+
+            # User is still not signed up
+            self.assertNotIn(user2, current_turn.signed_up)
+
 
 
