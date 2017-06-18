@@ -81,6 +81,11 @@ class TestApi(BaseTestClass):
         self.assertEqual(2, self.json_body(resp)["id"])
 
         # If done is called again, new turn_nr should be 3
+        resp = self.client.put('/turn/done')
+        self.assertEqual(201, resp.status_code)
+
+        resp = self.client.get('/turn')
+        self.assertEqual(3, self.json_body(resp)["id"])
 
 
     def test_api_call_for_signing_up_for_event(self):
