@@ -217,3 +217,29 @@ class TestApp(unittest.TestCase):
 
             user2 = User.query.get(2)
             self.assertIn(this_turn, user2.signed_up_for)
+
+    def test_api_call_for_signing_up_for_event(self):
+        pass
+
+    def test_change_signup_status_after_signup(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        # Sign up user2 for user1's event
+        with self.app.app_context():
+
+            user2 = User.query.get(2)
+            current_turn = Turns.next_turn()
+
+            current_turn.signup(user2)
+            db.session.add(current_turn)
+            db.session.commit()
+            self.assertIn(current_turn, user2.signed_up_for)
+
+        # Withdraw from signed up event
+            current_turn.withdraw(user2)
+
+            self.assertNotIn(current_turn, user2.signed_up_for)
+            self.assertEqual(0, len(current_turn.signed_up))
+
+

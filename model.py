@@ -3,10 +3,10 @@ import datetime as dt
 
 db = SQLAlchemy()
 
-
 signup_association = db.Table('signups',
                               db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
                               db.Column('turn_id', db.Integer, db.ForeignKey('turns.turn_id')))
+
 
 def swap_turn(user1, user2):
     """
@@ -20,6 +20,7 @@ def swap_turn(user1, user2):
     db.session.add(user1)
     db.session.add(user2)
     db.session.commit()
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -89,6 +90,10 @@ class Turns(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def withdraw(self, user):
+        self.signed_up.remove(user)
+        db.session.add(self)
+        db.session.commit()
 
     def serialize(self):
         return {
@@ -98,4 +103,3 @@ class Turns(db.Model):
             "phone": self.user.phone,
             "email": self.user.email
         }
-
