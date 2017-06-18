@@ -3,6 +3,18 @@ import datetime as dt
 
 db = SQLAlchemy()
 
+def swap_turn(user1, user2):
+    """
+    Takes two users and swaps their turns
+    :param user1: db.Model.User
+    :param user2: db.Model.User
+    :return: None
+    """
+
+    user2.turn, user1.turn = user1.turn, user2.turn
+    db.session.add(user1)
+    db.session.add(user2)
+    db.session.commit()
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -47,7 +59,6 @@ class User(db.Model):
 class Turns(db.Model):
     __tablename__ = 'turns'
 
-    # TODO: Implement as queue
     turn_id = db.Column(db.Integer, primary_key=True)
     finished = db.Column(db.Boolean)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -1,6 +1,6 @@
 import unittest
 from main import create_app
-from model import db, User, Turns
+from model import db, User, Turns,swap_turn
 from config import TestConfig
 import json
 
@@ -176,3 +176,27 @@ class TestApp(unittest.TestCase):
             self.assertTrue(1, len(turns))
             self.assertFalse(turns[0].finished)
             self.assertEqual(1, turns[0].user.id)
+
+    def test_swapping_turns_between_users_works_as_expected(self):
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            user = User.query.get(1)
+            self.assertFalse(user.turn.finished)
+            user2 = User.query.get(2)
+            self.assertFalse(user2.turn.finished)
+
+            turn1_id = user.turn.turn_id
+            turn2_id = user2.turn.turn_id
+
+            swap_turn(user, user2)
+
+            user = User.query.get(1)
+            self.assertEqual(turn2_id, user.turn.turn_id)
+            self.assertEqual(turn1_id, user2.turn.turn_id)
+
+            turn1 = Turns.query.get(turn1_id)
+            self.assertEqual(user2.id, turn1.user.id)
+            turn2 = Turns.query.get(turn2_id)
+            self.assertEqual(user.id, turn2.user.id)
