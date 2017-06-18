@@ -3,6 +3,11 @@ import datetime as dt
 
 db = SQLAlchemy()
 
+
+signup_association = db.Table('signups',
+                              db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+                              db.Column('turn_id', db.Integer, db.ForeignKey('turns.turn_id')))
+
 def swap_turn(user1, user2):
     """
     Takes two users and swaps their turns
@@ -26,6 +31,8 @@ class User(db.Model):
 
     created_date = db.Column(db.DateTime, default=dt.datetime.today())
     last_updated = db.Column(db.DateTime, default=dt.datetime.today(), onupdate=dt.datetime.today())
+
+    signed_up_for = db.relationship("Turns", secondary=signup_association, back_populates="signed_up")
 
     def __init__(self, name, email, phone=None):
         self.name = name
@@ -64,6 +71,7 @@ class Turns(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     user = db.relationship("User", backref=db.backref("turn", cascade="all, delete-orphan", uselist=False))
+    signed_up = db.relationship("User", secondary=signup_association, back_populates="signed_up_for")
 
     @classmethod
     def next_turn(cls):
@@ -76,6 +84,12 @@ class Turns(db.Model):
         db.session.add(user)
         db.session.commit()
 
+    def signup(self, user):
+        self.signed_up.append(user)
+        db.session.add(self)
+        db.session.commit()
+
+
     def serialize(self):
         return {
             "id": self.turn_id,
@@ -84,3 +98,4 @@ class Turns(db.Model):
             "phone": self.user.phone,
             "email": self.user.email
         }
+

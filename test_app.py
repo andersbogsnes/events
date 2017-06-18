@@ -213,3 +213,7 @@ class TestApp(unittest.TestCase):
 
             this_turn = Turns.next_turn()
             self.assertIn(user2, this_turn.signed_up)
+            self.assertEqual(user2.id, this_turn.signed_up[0].id)
+
+            user2 = User.query.get(2)
+            self.assertIn(this_turn, user2.signed_up_for)
