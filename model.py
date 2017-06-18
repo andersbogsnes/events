@@ -89,9 +89,12 @@ class Turns(db.Model):
         db.session.commit()
 
     def signup(self, user):
-        self.signed_up.append(user)
-        db.session.add(self)
-        db.session.commit()
+        if user not in self.signed_up:
+            self.signed_up.append(user)
+            db.session.add(self)
+            db.session.commit()
+        else:
+            raise EventSignupException("User already signed up")
 
     def withdraw(self, user):
         try:

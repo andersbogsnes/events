@@ -243,7 +243,19 @@ class TestApp(unittest.TestCase):
             self.assertEqual(0, len(current_turn.signed_up))
 
     def test_sign_up_for_already_signed_up_event(self):
-        pass
+        for user in self.test_users:
+            create_user(user, self.app)
+
+        with self.app.app_context():
+            user2 = User.query.get(2)
+            current_turn = Turns.next_turn()
+            current_turn.signup(user2)
+            self.assertIn(user2, current_turn.signed_up)
+
+            self.assertRaises(EventSignupException, current_turn.signup, user2)
+
+            self.assertIn(user2, current_turn.signed_up)
+            self.assertEqual(1, len(current_turn.signed_up))
 
     def test_change_signup_status_when_user_not_already_signed_up(self):
         for user in self.test_users:
@@ -252,8 +264,10 @@ class TestApp(unittest.TestCase):
         with self.app.app_context():
             user2 = User.query.get(2)
             current_turn = Turns.next_turn()
+
             # Make sure user not signed_up
             self.assertNotIn(user2, current_turn.signed_up)
+
             # Try to withdraw from event that user is not signed up for - should raise exception
             self.assertRaises(EventSignupException, current_turn.withdraw, user2)
 
