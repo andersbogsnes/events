@@ -59,6 +59,14 @@ class TestApi(BaseTestClass):
         self.assertEqual(200, resp.status_code)
         self.assertEqual(self.test_users[0]["name"], data["name"])
 
+    def test_get_all_turns(self):
+        resp = self.client.get('/turns')
+        data = self.json_body(resp)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(3, len(data))
+        self.assertEqual(1, data[0]["id"])
+        self.assertEqual(1, data[0]["user_id"])
+
     def test_complete_turn_for_user(self):
         # Get current turn
         resp = self.client.get('/turn')
@@ -170,3 +178,44 @@ class TestApi(BaseTestClass):
 
         resp = self.client.get('/turn/2')
         self.assertEqual(user1_id, self.json_body(resp)["user_id"])
+
+    def test_swapping_users_if_user_doesnt_exist(self):
+        data = {
+            "swap": [10, 20]
+        }
+
+        resp = self.client.put("/user/swap", data=json.dumps(data))
+        self.assertEqual(404, resp.status_code)
+        self.assertIn("error", self.json_body(resp))
+
+    def test_swapping_users_with_bad_data(self):
+        resp = self.client.put("/user/swap")
+        self.assertEqual(401, resp.status_code)
+
+    def test_signup_when_user_doesnt_exist(self):
+        data = {
+            "signed_up": 10
+        }
+
+        resp = self.client.put("/turn/signup/1", data=json.dumps(data))
+        self.assertEqual(404, resp.status_code)
+        self.assertIn("error", self.json_body(resp))
+
+    def test_signup_with_bad_data(self):
+        resp = self.client.put('/turn/signup/1')
+        self.assertEqual(401, resp.status_code)
+        self.assertIn("error", self.json_body(resp))
+
+    def test_withdraw_when_user_doesnt_exist(self):
+        data = {
+            "withdraw": 10
+        }
+
+        resp = self.client.put('/turn/withdraw/1', data=json.dumps(data))
+        self.assertEqual(404, resp.status_code)
+        self.assertIn("error", self.json_body(resp))
+
+    def test_withdraw_with_bad_data(self):
+        resp = self.client.put('/turn/withdraw/1')
+        self.assertEqual(401, resp.status_code)
+        self.assertIn("error", self.json_body(resp))

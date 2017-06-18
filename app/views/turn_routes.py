@@ -33,20 +33,6 @@ def pop_turn():
     return jsonify(turn.serialize()), 201
 
 
-@turn_routes.route('/turn/swap/<int:id>', methods=["PUT"])
-def modify_turn(id):
-    try:
-        data = request.get_json(force=True)
-        turn = Turns.query.get(id)
-        for key, value in data.items():
-            setattr(turn, key, value)
-        db.session.add(turn)
-        db.session.commit()
-        return jsonify(turn.serialize()), 200
-    except BadRequest:
-        return jsonify({""})
-
-
 @turn_routes.route('/turn/signup/<int:id>', methods=["PUT"])
 def signup_for_turn(id):
     try:
@@ -73,7 +59,6 @@ def withdraw_from_turn(id):
             return jsonify({"success": f"{user.name} withdrew from turn {turn.turn_id}"}), 201
         else:
             return jsonify({"error": f"User {data['withdraw']} not found"}), 404
-
 
     except BadRequest:
         return jsonify({"error": "Couldn't read request"}), 401

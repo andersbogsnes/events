@@ -39,10 +39,10 @@ def swap_users():
         if user and user2:
             user.swap_turn(user2)
             return jsonify({"success":
-                                f"User {user.id} now has turn {user.turn.turn_id}. \n"
+                                f"User {user.id} now has turn {user.turn.turn_id}. "
                                 f"User {user2.id} now has turn {user2.turn.turn_id}"}), 201
-
-
+        else:
+            return jsonify({"error": f"User {user_id} or User {user2_id} not found"}), 404
 
     except BadRequest:
         return jsonify({"error": "Couldn't read request"}), 401
